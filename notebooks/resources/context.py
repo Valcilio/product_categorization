@@ -57,6 +57,12 @@ class Context():
         PROJ_DIR = self.set_proj_path()
         return PROJ_DIR / 'data/raw'
 
+    def data_test_fld(self, **kwargs):
+        '''Create variable with TEST_DATA_FLD path'''
+
+        PROJ_DIR = self.set_proj_path()
+        return PROJ_DIR / 'tests/test_data'
+
     def models_fld(self, **kwargs):
         '''Create variable with RAW_FLD path'''
 

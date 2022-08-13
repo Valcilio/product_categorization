@@ -59,13 +59,69 @@ class ModelValidator():
                             'Recall Score': recall,
                             'F1-Score': f1_sc}])
 
+    def multi_class_metrics(self, X: pd.DataFrame, y: pd.Series):
+        '''Calculate metrics for evalueting multi classification models'''
+
+        yhat = pd.Series(self.model.predict(X))
+
+        accuracy = m.accuracy_score(y, yhat)
+        kappa = m.cohen_kappa_score(y, yhat)
+        precision = m.precision_score(y, yhat, average='macro', zero_division=0)
+        recall = m.recall_score(y, yhat, average='macro')
+        f1_sc = m.f1_score(y, yhat, average='macro')
+        
+        return pd.DataFrame([{'Model Name': self.model_name,
+                            'Accuracy': accuracy,
+                            'Kappa Score': kappa,
+                            'Precision Score': precision,
+                            'Recall Score': recall,
+                            'F1-Score': f1_sc}])
+
+    def kfolds_cross_val_multiclass(self, cv: int,
+                            verbose: bool = False, 
+                            test_size: float = 0.2, 
+                            **kwargs):
+        '''Kfolds Cross-Validation for validate with a reality simulation 
+        the models' performance (Multi-Class)'''
+
+        accuracy_list = []
+        kappa_list = []
+        precision_list = []
+        recall_list = []
+        f1_list = []
+
+        for k in range(cv):
+            if verbose:
+                print( '\nKFold Number: {}'.format( k ) )
+
+            X_train, X_val, y_train, y_val = train_test_split(self.X, self.y, test_size=test_size)
+
+            self.model.fit(X_train, y_train) 
+            m_result = self.multi_class_metrics(X=X_val, y=y_val)
+
+            # store performance of each kfold iteration
+            accuracy_list.append(m_result['Accuracy'])
+            kappa_list.append(m_result['Kappa Score'])
+            precision_list.append(m_result['Precision Score'])
+            recall_list.append(m_result['Recall Score'])
+            f1_list.append(m_result['F1-Score'])
+
+        return pd.DataFrame({
+                            'Model Name': self.model_name,
+                            'Accuracy CV': np.mean(accuracy_list),
+                            'Kappa CV': np.mean(kappa_list),
+                            'Precision CV': np.mean(precision_list),
+                            'Recall CV': np.mean(recall_list),
+                            'F1-Score CV': np.mean(f1_list)
+                            }, index=[0])
+
     def kfolds_cross_val_class(self, cv: int,
                             threshold: float,
                             verbose: bool = False, 
                             test_size: float = 0.2, 
                             **kwargs):
         '''Kfolds Cross-Validation for validate with a reality simulation 
-        the models' performance'''
+        the models' performance (Binary Class)'''
 
         accuracy_list = []
         aucroc_list = []
@@ -106,7 +162,7 @@ class ModelValidator():
                             cv: int, verbose: bool = False, 
                             test_size: float = 0.2, **kwargs):
         '''Kfolds Cross-Validation for validate with a reality simulation 
-        the models' performance'''
+        the models' performance (Regression)'''
 
         mae_list = []
         mape_list = []

@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+import joblib
 from   sklearn import preprocessing as pp
+
+from .context import Context as c
 
 class DataTransformer():
 
@@ -24,21 +27,18 @@ class DataTransformer():
         df = df.copy()
 
         if method in ['box-cox', 'yeo-johnson']:
-            scaler = pp.PowerTransformer(method=method)
-            scaler = scaler.fit(df[[y]])
-            df[f'{method}_{y}'] = scaler.transform(df[[y]])
+            df[f'{method}_{y}'], scaler = self._transfomer(df=df, scaler=pp.PowerTransformer(method=method), y=y)
         elif method == 'min-max':
-            scaler = pp.MinMaxScaler()
-            scaler = scaler.fit(df[[y]])
-            df[f'{method}_{y}'] = scaler.transform(df[[y]])
+            df[f'{method}_{y}'], scaler = self._transfomer(df=df, scaler=pp.MinMaxScaler(), y=y)
         elif method == 'robust-scaler':
-            scaler = pp.RobustScaler()
-            scaler = scaler.fit(df[[y]])
-            df[f'{method}_{y}'] = scaler.transform(df[[y]])
+            df[f'{method}_{y}'], scaler = self._transfomer(df=df, scaler=pp.RobustScaler(), y=y)
+        elif method == 'label-encoder':
+            df[f'{method}_{y}'], scaler = self._transfomer(df=df, scaler=pp.LabelEncoder(), y=y)
         elif method == 'log1p':
             scaler = 'log1p'
-            df[f'{method}_{y}'] = np.log1p(df[y])
+            df[f'{method}_{y}'], scaler = np.log1p(df[y])
 
+        self._save_scaler(scaler=scaler, scaler_name= f'{method}_{y}' + '_scaler.pkl')
         df = df.drop(y, axis=1)
 
         return df, scaler
@@ -73,3 +73,11 @@ class DataTransformer():
         y_val_df = y_val_df.reset_index(drop=True)
 
         return y_val_df
+
+    def _transfomer(self, df: pd.DataFrame, y: str, scaler):
+        scaler = scaler.fit(df[[y]])
+        return scaler.transform(df[[y]]), scaler
+
+    def _save_scaler(self, scaler, scaler_name: str):
+
+        joblib.dump(scaler, open((c().scalers_fld() / scaler_name), 'wb'))

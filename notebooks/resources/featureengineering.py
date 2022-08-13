@@ -1,89 +1,49 @@
+import datetime as dt
+import numpy as np
 import pandas as pd
 
 class FeatureEngineering():
 
-    def __init__(self, df: pd.DataFrame, **kwargs):
+    def __init__(self, time_var: str, df: pd.DataFrame):
         '''This class is specific for this problem'''
 
+        self.time_var = time_var
         self.df = df.copy()
 
-    def uf(self, **kwargs):
-        '''Feature who says who are the UF'''
-        
-        df1 = self.df
-        df1['uf'] = df1['uf_cidade'].apply(lambda x: x[0:2])
+    def page_position(self):
+        '''Indicates the position on the search page'''
 
-        return df1['uf']
+        return self.df['position'] / self.df['search_page']
 
-    def decade(self, **kwargs):
-        '''Feature who get together a bunch of years'''
+    def price_per_weight(self):
+        '''Indicates the price per weight'''
 
-        df1 = self.df
-        df1['decade'] = df1['ano_modelo'].astype(int).apply(lambda x: 
-                                                            '2000 <' if x < 2000 else
-                                                            '2000 > | 2005 <' if (x > 2000) & (x < 2005) else
-                                                            '2005 > | 2010 <' if (x > 2005) & (x < 2010) else
-                                                            '2010 > | 2015 <' if (x > 2010) & (x < 2015) else
-                                                            '2015 > | 2020 <' if (x > 2015) & (x < 2020) else
-                                                            '2020 >')
+        self.df['price_per_weight'] = self.df['price'] / self.df['weight']
+        self.df['price_per_weight'] = np.where(self.df['weight'] <= 0, 0, self.df['price_per_weight'])
 
-        return df1['decade']
+        return self.df['price_per_weight']
 
-    def ipva_dono(self, **kwargs):
-        '''Feature who get together the IPVA paid feature and with only one owner feature'''
+    def day_of_week(self):
+        '''Indicates the day of week'''
 
-        df1 = self.df
-        df1['unico_dono'] = df1['flg_unico_dono'].apply(lambda x: 'oneowner' if x == '1' else 'moreowners')
-        df1['ipva_pago'] = df1['flg_ipva_pago'].apply(lambda x: 'paid' if x == '1.0' else 'no_paid')
-        df1['ipva_dono'] = df1['ipva_pago'] + '_|_' + df1['unico_dono']
-        
-        return df1['ipva_dono']
+        return self.df[self.time_var].dt.day_of_week
 
-    def sensors(self, **kwargs):
-        '''Feature who indicates if exist sensors in the car'''
+    def day_of_month(self):
+        '''Indicates the day of month'''
 
-        df1 = self.df
-        df1['schuva'] = df1['sensorchuva'].apply(lambda x: 'schuva' if x == 'S' else 'no_schuva')
-        df1['srestacion'] = df1['sensorestacion'].apply(lambda x: 'restacion' if x == 'S' else 'no_rest')
-        df1['sensors'] = df1['schuva'] + '_|_' + df1['srestacion']
+        return self.df[self.time_var].dt.day
 
-        return df1['sensors']
+    def week_of_year(self):
+        '''Indicates the week of year'''
 
-    def eletr_car(self, **kwargs):
-        '''Feature who indicates if exist eletricfy features in the car'''
+        return self.df[self.time_var].dt.isocalendar().week
 
-        df1 = self.df
-        df1['el_trava'] = df1['travaeletr'].apply(lambda x: 'travaeletr' if x == 'S' else 'no_travaeletr')
-        df1['el_vidro'] = df1['vidroseletr'].apply(lambda x: 'vidroseletr' if x == 'S' else 'no_vidroseletr')
-        df1['eletr_car'] = df1['el_trava'] + '_|_' + df1['el_vidro']
+    def month(self):
+        '''Indicates the month year'''
 
-        return df1['eletr_car']
+        return self.df[self.time_var].dt.month
 
-    def best_offer(self, **kwargs):
-        '''Feature who indicates if the car have the best offer possible'''
+    def year(self):
+        '''Indicate the year'''
 
-        df1 = self.df
-        df1['prioridade'] = df1['prioridade'].apply(lambda x: 'prio' if x == '2' else 'no_prio')
-        df1['flg_aceita_troca'] = df1['flg_aceita_troca'].apply(lambda x: 'troca' if x == '1' else 'no_troca')
-        df1['flg_blindado'] = df1['flg_blindado'].apply(lambda x: 'blind' if x == '1' else 'no_blind')
-        df1['flg_todas_revisoes_agenda_veiculo'] = df1['flg_todas_revisoes_agenda_veiculo'].apply(lambda x: 'all_rev' if x == '1' else 'no_rev')
-
-        df1['big_offer'] = (df1['prioridade'] + '_|_' + df1['flg_aceita_troca'] + '_|_' + df1['flg_blindado'] + '_|_' + df1['flg_todas_revisoes_agenda_veiculo'])
-
-        first_offers = ['no_prio_|_troca_|_blind_|_all_rev', 'no_prio_|_troca_|_blind_|_no_rev',
-               'prio_|_no_troca_|_blind_|_all_rev', 'prio_|_troca_|_blind_|_all_rev']
-
-        second_offers = ['no_prio_|_no_troca_|_blind_|_all_rev', 'no_prio_|_troca_|_no_blind_|_all_rev',
-                        'no_prio_|_troca_|_no_blind_|_no_rev', 'prio_|_no_troca_|_blind_|_no_rev',
-                        'prio_|_no_troca_|_no_blind_|_all_rev', 'prio_|_troca_|_blind_|_no_rev',
-                        'prio_|_troca_|_no_blind_|_all_rev', 'prio_|_troca_|_no_blind_|_no_rev']
-
-        third_offers = ['no_prio_|_no_troca_|_blind_|_no_rev', 'no_prio_|_no_troca_|_no_blind_|_all_rev',
-                        'no_prio_|_no_troca_|_no_blind_|_no_rev', 'prio_|_no_troca_|_no_blind_|_no_rev']
-
-        df1['best_offer'] = df1['big_offer'].apply(lambda x: 1 if x in first_offers else
-                                                    2 if x in second_offers else
-                                                    3 if x in third_offers else 
-                                                    3)
-
-        return df1['best_offer']
+        return self.df[self.time_var].dt.year
