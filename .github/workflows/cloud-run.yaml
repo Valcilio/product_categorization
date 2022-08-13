@@ -8,7 +8,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.RUN_PROJECT }}
   RUN_REGION: us-central1
-  SERVICE_NAME: product_cat
+  SERVICE_NAME: catprod
 
 jobs:
   setup-build-deploy:
