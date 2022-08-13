@@ -31,12 +31,21 @@ class DataPreparator():
 
         return self.df_pred
 
+    def return_product_id(self):
+        '''Return product_id'''
+
+        self._structure_json()
+
+        return self.df_pred['product_id']
+
     def reverse_category(self, df_pred: pd.DataFrame):
         '''Reverse category in numeric format to strings'''
 
-        df_pred['category'] = self._rescaler.inverse_category(df_pred)
+        self._structure_json()
+        df_pred = pd.DataFrame(df_pred)
+        df_pred['category'] = self._rescaler().inverse_category(df_pred)
 
-        return df_pred
+        return df_pred.drop('label-encoder_category', axis=1)
 
     def _run_rescaler(self):
         '''Rescale all variables for modeling'''

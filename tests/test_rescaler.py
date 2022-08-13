@@ -102,7 +102,7 @@ def test_run(run_rescaler, rescaled_features):
         assert ((run_rescaler[feature].max() <= 1) & (run_rescaler[feature].min() >= 0))
 
 def test_inverse_category(categories, rescaler, encoding_category):
-    '''Test if the data types are returning correct after transformation'''
+    ''''Test if is reversing values of categories correctly'''
 
     encoding_category['label-encoder_category'] = rescaler.inverse_category(encoding_category)
     categories_df = list(encoding_category['label-encoder_category'].unique())

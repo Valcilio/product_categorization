@@ -1,4 +1,6 @@
+import joblib
 import pandas as pd
+from pandas.testing import assert_series_equal
 import pytest
 
 from domain.connectors.datapreparator import DataPreparator
@@ -10,6 +12,37 @@ def load_data():
     df_json = pd.read_csv('tests/test_data/test_df.csv').to_json()
 
     return {'data': df_json}
+
+@pytest.fixture
+def load_category_scaler():
+    '''Load category scaler'''
+
+    return joblib.load(open('scalers/label-encoder_category_scaler.pkl', 'rb'))
+
+@pytest.fixture
+def structure_json(load_data):
+    '''Structure JSON for testing'''
+
+    json_df = load_data['data']
+    df_test = pd.read_json(json_df)
+
+    return df_test
+
+@pytest.fixture
+def encoding_category(structure_json, load_category_scaler):
+    '''Encoding category to testing'''
+
+    other_categories = ['Papel e Cia', 'Bijuterias e Jóias']
+    structure_json['category'] = structure_json['category'].apply(lambda x: 'Outros' if x in other_categories else x)
+    structure_json['label-encoder_category'] = load_category_scaler.transform(structure_json['category'].ravel())
+
+    return structure_json
+
+@pytest.fixture
+def categories():
+    '''List of categories to exist after reverse transformation'''
+
+    return ['Decoração', 'Lembrancinhas', 'Outros', 'Bebê']
 
 @pytest.fixture
 def rescaled_features():
@@ -35,10 +68,26 @@ def model_features():
             'min-max_weight':'float64'}
 
 @pytest.fixture
-def run_preparate_data(load_data):
+def call_datapreparator(load_data):
     '''Run process to rescale all data for testing'''
 
-    df_pred = DataPreparator(json_df=load_data).preparate_data()
+    data_preparator = DataPreparator(json_df=load_data)
+
+    return data_preparator
+
+@pytest.fixture
+def get_product_id(load_data):
+    '''Return product_id'''
+
+    df_test = pd.read_json(load_data['data'])
+
+    return df_test['product_id']
+
+@pytest.fixture
+def run_preparate_data(call_datapreparator):
+    '''Run process to rescale all data for testing'''
+
+    df_pred = call_datapreparator.preparate_data()
 
     return df_pred
 
@@ -54,3 +103,18 @@ def test_datapreparator_scales(run_preparate_data, rescaled_features):
 
     for feature in rescaled_features:
         assert ((run_preparate_data[feature].max() <= 1) & (run_preparate_data[feature].min() >= 0))
+
+def test_reverse_encoding(call_datapreparator, encoding_category, categories):
+    '''Test if is reversing values of categories correctly'''
+
+    encoding_category = call_datapreparator.reverse_category(encoding_category)
+    categories_df = list(encoding_category['category'].unique())
+
+    assert categories == categories_df
+
+def test_return_product_id(get_product_id, call_datapreparator):
+    '''Test if is returning the product_id correctly'''
+
+    product_id = call_datapreparator.return_product_id()
+
+    assert_series_equal(product_id, get_product_id) 

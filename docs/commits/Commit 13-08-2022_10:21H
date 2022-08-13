@@ -1,0 +1,21 @@
+All layers and tests finished, read to deployment.
+
+Warning:
+    - No warnings.
+
+Additioned:
+    - tests/test_data/df_prep_test.csv: dataset prepared for run in notebook to compare with modelrunner.py.
+    - tests/test_data/pred_test.csv: prediction from notebook to test prediction in .py.
+    - tests/test_modelrunner.py: testing modelrunner for guarantee equality in prediction (development / production).
+    - domain/connectors/modelrunner.py: additioned methods to run model.
+    - tests/api_tester.ipynb: additioned modifications for testing 
+
+Revised:
+    - domain/connectors/datapreparator.py: corrected some bugs and addiotined new codes to guarantee correct reversing of categories.
+    - domain/use_cases/rescaler.py: revised to inverse category correctly.
+    - models/xgb_class_model.pkl: updated to fit better with notebook's model.
+    - notebooks/03-model_evaluation_classification.ipynb: modified to save predicted data for testing.
+    - tests/test_datapreparator.py: revised for testing inverse transformation of category.
+    - tests/test_rescaler.py: revised for testing inverse transformation correct.
+    - main.py: adapted for this software.
+

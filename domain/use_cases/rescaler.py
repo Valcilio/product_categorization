@@ -32,7 +32,7 @@ class Rescaler():
     def inverse_category(self, df_pred: pd.DataFrame):
         '''Inverse category to the normal scale'''
 
-        df_pred['category'] = self.category_scaler.inverse_transform(df_pred[['label-encoder_category']])
+        df_pred['category'] = self.category_scaler.inverse_transform(df_pred['label-encoder_category'].ravel())
 
         return df_pred['category']
 
